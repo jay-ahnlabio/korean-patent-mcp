@@ -204,6 +204,48 @@ async def kipris_search_patents(
         return f"❌ 검색 오류: {str(e)}"
 
 
+@mcp.tool(name="kipris_search_patents_by_title")
+async def kipris_search_patents_by_title(
+    title: str,
+    page: int = 1,
+    page_size: int = 20,
+    status: Optional[str] = None,
+    response_format: str = "markdown"
+) -> str:
+    """발명의 명칭으로 한국 특허를 검색합니다.
+    
+    Args:
+        title: 발명의 명칭 (필수, 예: '인공지능', '반도체')
+        page: 페이지 번호 (기본값: 1)
+        page_size: 페이지당 결과 수 (기본값: 20, 최대: 100)
+        status: 상태 필터 ('A': 공개, 'R': 등록, 'J': 거절, None: 전체)
+        response_format: 응답 형식 ('markdown' 또는 'json')
+    """
+    # Get API key from session config or environment
+    api_key = get_config_value("kiprisApiKey") or os.getenv("KIPRIS_API_KEY", "")
+    if api_key:
+        init_client_with_key(api_key)
+    
+    client = get_kipris_client()
+    if client is None:
+        error = get_init_error() or "API 클라이언트 초기화 실패. KIPRIS_API_KEY를 설정해주세요."
+        return f"❌ 오류: {error}"
+    
+    try:
+        result = await client.search_patents_by_title(
+            title=title,
+            page=page,
+            page_size=min(page_size, 100),
+            status=status or ""
+        )
+        
+        if response_format == "json":
+            return json.dumps(result, ensure_ascii=False, indent=2)
+        return format_search_result_markdown(result)
+    except Exception as e:
+        return f"❌ 검색 오류: {str(e)}"
+
+
 @mcp.tool(name="kipris_get_patent_detail")
 async def kipris_get_patent_detail(
     application_number: str,

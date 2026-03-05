@@ -38,6 +38,7 @@ class KiprisAPIClient:
     # API 엔드포인트
     ENDPOINTS = {
         "applicant_search": "/patUtiModInfoSearchSevice/applicantNameSearchInfo",
+        "title_search": "/patUtiModInfoSearchSevice/itemTLSearchInfo",
         "application_search": "/patUtiModInfoSearchSevice/applicationNumberSearchInfo",
         "citing_info": "/CitingService/citingInfo",
         "patent_info": "/patUtiModInfoSearchSevice/applicationNumberSearchInfo",
@@ -157,6 +158,61 @@ class KiprisAPIClient:
             "next_page": page + 1 if (page * page_size) < total_count else None
         }
     
+    async def search_patents_by_title(
+        self,
+        title: str,
+        page: int = 1,
+        page_size: int = 20,
+        status: str = ""
+    ) -> Dict[str, Any]:
+        """
+        발명의 명칭으로 특허 검색
+        
+        Args:
+            title: 발명의 명칭 (예: "인공지능", "반도체")
+            page: 페이지 번호 (1부터 시작)
+            page_size: 페이지당 결과 수 (최대 500)
+            status: 상태 필터 (A: 공개, R: 등록, J: 거절, 빈값: 전체)
+            
+        Returns:
+            검색 결과 딕셔너리
+        """
+        params = {
+            "inventionTitle": title,
+            "docsStart": str(page),
+            "docsCount": str(min(page_size, 500)),
+            "patent": "true",
+            "utility": "false",
+            "lastvalue": status
+        }
+        
+        root = await self._make_request(
+            self.ENDPOINTS["title_search"], 
+            params
+        )
+        
+        if root is None:
+            return {"patents": [], "total_count": 0, "page": page}
+        
+        # 전체 건수
+        total_elem = root.find(".//TotalSearchCount")
+        total_count = int(total_elem.text) if (total_elem is not None and total_elem.text) else 0
+        
+        # 특허 정보 추출
+        patents = []
+        for item in root.findall(".//PatentUtilityInfo"):
+            patent = self._parse_patent_info(item)
+            patents.append(patent)
+        
+        return {
+            "patents": patents,
+            "total_count": total_count,
+            "page": page,
+            "page_size": len(patents),
+            "has_more": (page * page_size) < total_count,
+            "next_page": page + 1 if (page * page_size) < total_count else None
+        }
+
     async def get_patent_detail(
         self,
         application_number: str
