@@ -27,6 +27,9 @@ npx -y @smithery/cli install korean-patent-mcp --client claude
 
 # Or install via uv
 uv pip install git+https://github.com/Tech-curator/korean-patent-mcp.git
+
+# Or run directly without installation via uvx
+uvx --from git+https://github.com/Tech-curator/korean-patent-mcp.git korean-patent-mcp
 ```
 
 ### Requirements
@@ -48,8 +51,12 @@ Or add to your MCP client configuration:
 {
   "mcpServers": {
     "korean-patent": {
-      "command": "uv",
-      "args": ["run", "korean-patent-mcp"],
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/Tech-curator/korean-patent-mcp.git",
+        "korean-patent-mcp"
+      ],
       "env": {
         "KIPRIS_API_KEY": "your_api_key_here"
       }
@@ -119,6 +126,13 @@ uv pip install -e .
 pip install -e .
 ```
 
+### 방법 3: uvx를 사용한 직접 실행 (설치 불필요)
+
+```bash
+# 설치 과정 없이 임시 환경에서 즉시 실행
+uvx --from git+https://github.com/Tech-curator/korean-patent-mcp.git korean-patent-mcp
+```
+
 ### 요구사항
 
 - Python 3.10+
@@ -151,8 +165,12 @@ export KIPRIS_API_KEY="your_api_key_here"
 {
   "mcpServers": {
     "korean-patent": {
-      "command": "uv",
-      "args": ["run", "korean-patent-mcp"],
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/Tech-curator/korean-patent-mcp.git",
+        "korean-patent-mcp"
+      ],
       "env": {
         "KIPRIS_API_KEY": "your_api_key_here"
       }
